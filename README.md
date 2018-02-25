@@ -1,9 +1,10 @@
 ## go-epay
 A generic ePay integration in Go
 
-### Modules
-An integration with the online payment processor of TelcoNG:
- * telcong-epay-adapter
+### Supported Modules
+ * TelcoNG 
+   An integration with the online payment processor of TelcoNG by using the telcong-epay-adapter. The  
+   billing-key-file should be issued from the administrative IAM panel of the platform.
 
 ### Architecture
 ![Architecture](docs/architecture.png)
