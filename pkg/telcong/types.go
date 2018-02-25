@@ -2,6 +2,14 @@ package telcong
 
 import "time"
 
+// SubscriberDuties represents duties of the subscriber
+type SubscriberDuties struct {
+	CustomerName string `json:"customerName"`
+	Address      string `json:"address"`
+	DutyAmount   Amount `json:"dutyAmount"`
+	Items        []Item `json:"items"`
+}
+
 // PaymentSource is representing the source of the payment
 type PaymentSource string
 
@@ -13,26 +21,30 @@ type CreatePaymentOrderRequest struct {
 	TransactionID string        `json:"transactionId"`
 }
 
-// CreatePaymentOrderResponse represents the response of the creation
-type CreatePaymentOrderResponse struct {
-	ID            string             `json:"id"`
-	TransactionID string             `json:"transactionId"`
-	Amount        Amount             `json:"amount"`
-	Created       time.Time          `json:"created"`
-	Items         []PaymentOrderItem `json:"items"`
-}
-
+// PayPaymentOrderResponse is representing the respons which is returned when payment
+// order is paid
 type PayPaymentOrderResponse struct {
-	ID            string             `json:"id"`
-	TransactionID string             `json:"transactionId"`
-	Amount        Amount             `json:"amount"`
-	Created       time.Time          `json:"created"`
-	PaidOn        time.Time          `json:"paidOn"`
-	Items         []PaymentOrderItem `json:"items"`
+	ID            string    `json:"id"`
+	CustomerName  string    `json:"customerName"`
+	TransactionID string    `json:"transactionId"`
+	Amount        Amount    `json:"amount"`
+	Created       time.Time `json:"created"`
+	PaidOn        time.Time `json:"paidOn"`
+	Items         []Item    `json:"items"`
 }
 
-// PaymentOrderItem is a single item in the PaymentOrder.
-type PaymentOrderItem struct {
+// PaymentOrder is a single PaymentOrder
+type PaymentOrder struct {
+	ID            string    `json:"id"`
+	CustomerName  string    `json:"customerName"`
+	TransactionID string    `json:"transactionId"`
+	Amount        Amount    `json:"amount"`
+	Created       time.Time `json:"created"`
+	Items         []Item    `json:"items"`
+}
+
+// Item is a single item line.
+type Item struct {
 	Name      string    `json:"name"`
 	StartDate time.Time `json:"startDate"`
 	EndDate   time.Time `json:"endDate"`

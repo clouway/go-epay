@@ -3,13 +3,14 @@ A generic ePay integration in Go
 
 ### Supported Modules
  * TelcoNG 
-   An integration with the online payment processor of TelcoNG by using the telcong-epay-adapter. The  
-   billing-key-file should be issued from the administrative IAM panel of the platform.
+   An integration with the online payment processor of TelcoNG by using go-epay and telcong-epay-adapter. The first 
+   one could be deployed on GAE whether the second one could be deployed on any environment. Note that the  billing-key-file
+   should be issued from the administrative IAM panel of the platform.
 
 ### Architecture
 ![Architecture](docs/architecture.png)
 
-### Building
+### Building telcong-epay-adapter (Uses TCP)
 
 ```sh
 go get github.com/clouway/go-epay

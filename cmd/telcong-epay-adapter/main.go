@@ -80,7 +80,7 @@ type telcongEpayGateway struct {
 
 // GetCurrentBill returns the current bill of the provided customer.
 func (t *telcongEpayGateway) GetCurrentBill(customerID, transactionID string) (*epay.BillResponse, error) {
-	res, err := t.client.CreatePaymentOrder(telcong.CreatePaymentOrderRequest{SubscriberID: customerID, TransactionID: transactionID, PaymentSource: EPAY})
+	res, err := t.client.CreatePaymentOrder(context.Background(), telcong.CreatePaymentOrderRequest{SubscriberID: customerID, TransactionID: transactionID, PaymentSource: EPAY})
 	if err != nil {
 		if err == telcong.ErrPaymentOrderAlreadyExists {
 			return nil, fmt.Errorf("bill with transactionId '%s' was already processed", transactionID)
@@ -102,11 +102,17 @@ func (t *telcongEpayGateway) GetCurrentBill(customerID, transactionID string) (*
 
 // PayBill pays bill using the provided amount
 func (t *telcongEpayGateway) PayBill(customerID, transactionID string, Amount int) (*epay.PaymentResponse, error) {
-	_, err := t.client.PayPaymentOrder(transactionID)
+	paymentOrder, err := t.client.GetPaymentOrder(context.Background(), transactionID)
+
 	if err != nil {
 		if err == telcong.ErrPaymentOrderNotFound {
 			return &epay.PaymentResponse{Successful: false}, nil
 		}
+		return nil, fmt.Errorf("could not retrieve payment order due: %v", err)
+	}
+
+	_, err = t.client.PayPaymentOrder(context.Background(), paymentOrder.ID)
+	if err != nil {
 		if err == telcong.ErrPaymentOrderAlreadyPaid {
 			return &epay.PaymentResponse{Successful: false, AlreadyPaid: true}, nil
 		}
