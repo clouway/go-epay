@@ -12,11 +12,17 @@ A generic ePay integration in Go
 ### Building
 
 ```sh
+go get github.com/clouway/go-epay
+
+cd $GOPATH/src/github.com/clouway/go-epay/
 make test
 make install
 
 telcong-epay-adapter --help
 ```
+
+### Requirements
+ * Go 1.8.x or greater
 
 ### License
 Copyright 2018 clouWay ood.
