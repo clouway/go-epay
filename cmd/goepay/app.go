@@ -205,10 +205,18 @@ func inCoins(value string) int {
 
 func buildLongDesc(subscriberID string, items []telcong.Item) string {
 	lines := []string{}
+	dup := make(map[string]string)
 	for _, item := range items {
+		_, ok := dup[item.Name]
+		if ok {
+			continue
+		}
+		dup[item.Name] = item.Name
 		lines = append(lines, item.Name)
 	}
-	return fmt.Sprintf("Клиентски Номер: %s, Клиентски услуги: %s", subscriberID, strings.Join(lines, ","))
+	endDate := items[len(items)-1].EndDate
+
+	return fmt.Sprintf("Клиентски Номер: %s,Задължения за периода до: %s, Детайли: %s", subscriberID, endDate.Format("02/01/2006"), strings.Join(lines, ","))
 }
 
 type dutyResponse struct {
