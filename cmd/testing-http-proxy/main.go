@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	listenAddr = flag.String("listenAddr", ":16700", "http listening address, the default value is ':16700'")
+	listenAddr = flag.String("listenAddr", ":16700", "http listening address")
 	targetURL  = flag.String("targetURL", "http://127.0.0.1:8080", "the URL of the target HTTP server")
 )
 
