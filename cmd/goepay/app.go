@@ -2,6 +2,9 @@ package main
 
 import (
 	"context"
+	"crypto/hmac"
+	"crypto/sha1"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -37,10 +40,6 @@ const (
 
 	// EPAY payment source
 	EPAY telcong.PaymentSource = "EPAY"
-)
-
-var (
-	scopes = []string{"read:subscriber_duties", "read:online_payment_orders", "write:online_payment_orders"}
 )
 
 func init() {
@@ -84,6 +83,12 @@ func (e *epayGateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	transactionID := r.URL.Query().Get("TID")
 	operationType := checkType(r.URL.Query().Get("TYPE"))
 	log.Debugf(ctx, "IDN=%s, checksum=%s, merchant=%s,transactionID=%s, checkType=%s", idn, checksum, merchant, transactionID, operationType)
+
+	checksumValue := fmt.Sprintf("IDN%s\nMERCHANTID%s\nTID%s\n", idn, merchant, transactionID)
+	if checksum != computeHmacSha1(checksumValue, e.env.EpaySecret) {
+		http.Error(w, "bad signature", http.StatusBadRequest)
+		return
+	}
 
 	if strings.HasSuffix(r.URL.Path, "init") && (operationType == check || operationType == "") {
 		e.checkBill(ctx, w, r)
@@ -217,6 +222,13 @@ func buildLongDesc(subscriberID string, items []telcong.Item) string {
 	endDate := items[len(items)-1].EndDate
 
 	return fmt.Sprintf("Клиентски Номер: %s,Задължения за периода до: %s, Детайли: %s", subscriberID, endDate.Format("02/01/2006"), strings.Join(lines, ","))
+}
+
+func computeHmacSha1(message string, secret string) string {
+	key := []byte(secret)
+	h := hmac.New(sha1.New, key)
+	h.Write([]byte(message))
+	return hex.EncodeToString(h.Sum(nil))
 }
 
 type dutyResponse struct {

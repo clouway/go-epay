@@ -16,6 +16,8 @@ it's structure should be as follow:
 2. Key - "default" if app is appspot domain is used or name of your domain if different one is used: e.g "myepaygw.yourdomain.com" 
 3. billingKey (type string) - the json key generated from the IAM console of TelcoNG
 4. billingURL (type string) - the url of the billing, e.g https://cloud.telcong.com or of the provided testing environment
+5. epaySecret (type string) - the secret that was provided by ePay for doing hmac verificatoins
+6. merchantId (type string) - the id of the Merchant provided by ePay
 
 ### Deployment
 ```

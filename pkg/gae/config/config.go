@@ -17,6 +17,14 @@ type Environment struct {
 	// BillingURL is the billing is the URL API which to be used for retrieving of the
 	// billing information
 	BillingURL string
+
+	// EpaySecret is the secret that is provided from ePay for verification
+	// of the Checksum using HMAC SHA1 encoded as HEX
+	EpaySecret string
+
+	// MerchantID is the identifier of the merchant which was issued by ePay
+	// provider
+	MerchantID string
 }
 
 // GetEnv gets the configuration environment associated with the provided name. The GetEnv
@@ -33,10 +41,12 @@ func GetEnv(ctx context.Context, name string) (*Environment, error) {
 	if err := datastore.Get(ctx, key, e); err != nil {
 		return nil, fmt.Errorf("could not load the environment '%s' due: %v", name, err)
 	}
-	return &Environment{BillingJWTKey: e.BillingKey, BillingURL: e.BillingURL}, nil
+	return &Environment{BillingJWTKey: e.BillingKey, BillingURL: e.BillingURL, EpaySecret: e.EpaySecret, MerchantID: e.MerchantID}, nil
 }
 
 type environmentEntity struct {
 	BillingKey string `datastore:"billingKey"`
 	BillingURL string `datastore:"billingURL"`
+	EpaySecret string `datastore:"epaySecret"`
+	MerchantID string `datastore:"merchantId"`
 }
