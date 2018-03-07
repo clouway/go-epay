@@ -81,10 +81,11 @@ func (e *epayGateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	checksum := r.URL.Query().Get("CHECKSUM")
 	merchant := r.URL.Query().Get("MERCHANTID")
 	transactionID := r.URL.Query().Get("TID")
+	total := r.URL.Query().Get("TOTAL")
 	operationType := checkType(r.URL.Query().Get("TYPE"))
-	log.Debugf(ctx, "IDN=%s, checksum=%s, merchant=%s,transactionID=%s, checkType=%s", idn, checksum, merchant, transactionID, operationType)
+	log.Debugf(ctx, "IDN=%s, checksum=%s, merchant=%s,transactionID=%s, operationType=%s, total=%s", idn, checksum, merchant, transactionID, operationType, total)
 
-	checksumValue := fmt.Sprintf("IDN%s\nMERCHANTID%s\nTID%s\n", idn, merchant, transactionID)
+	checksumValue := fmt.Sprintf("IDN%s\nMERCHANTID%s\nTID%s\nTOTAL%s\nTYPE%s\n", idn, merchant, transactionID, total, operationType)
 	if checksum != computeHmacSha1(checksumValue, e.env.EpaySecret) {
 		http.Error(w, "bad signature", http.StatusBadRequest)
 		return
