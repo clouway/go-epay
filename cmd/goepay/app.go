@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -85,16 +86,8 @@ func (e *epayGateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	operationType := checkType(r.URL.Query().Get("TYPE"))
 	log.Debugf(ctx, "IDN=%s, checksum=%s, merchant=%s,transactionID=%s, operationType=%s, total=%s", idn, checksum, merchant, transactionID, operationType, total)
 
-	attributes := []attribute{
-		{"IDN", idn},
-		{"MERCHANTID", merchant},
-		{"TID", transactionID},
-		{"TOTAL", total},
-		{"TYPE", string(operationType)},
-	}
-
-	if checksum != computeHmacSha1(attributes, e.env.EpaySecret) {
-		http.Error(w, "bad signature", http.StatusBadRequest)
+	if checksum != computeHmacSha1(r.URL.Query(), e.env.EpaySecret) {
+		respondWithJSON(w, dutyResponse{Status: StatusBadChecksum})
 		return
 	}
 
@@ -107,11 +100,6 @@ func (e *epayGateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	} else {
 		http.Error(w, "not found", http.StatusNotFound)
 	}
-}
-
-type attribute struct {
-	Key   string
-	Value string
 }
 
 func (e *epayGateway) checkBill(ctx context.Context, rw http.ResponseWriter, r *http.Request) {
@@ -153,7 +141,7 @@ func (e *epayGateway) createPaymentOrder(ctx context.Context, rw http.ResponseWr
 		coins := inCoins(res.Amount.Value)
 		response = successResponse(idn, res.CustomerName, res.Items, coins)
 	} else if err == telcong.ErrPaymentOrderAlreadyExists {
-		response = &dutyResponse{Status: StatusAlreadyPaid}
+		response = &dutyResponse{Status: StatusNoDuties}
 	} else if err == telcong.ErrSubscriberNotFound {
 		response = &dutyResponse{Status: StatusSubscriberNotFound}
 	} else {
@@ -237,12 +225,19 @@ func buildLongDesc(subscriberID string, items []telcong.Item) string {
 	return fmt.Sprintf("Клиентски Номер: %s,Задължения за периода до: %s, Детайли: %s", subscriberID, endDate.Format("02/01/2006"), strings.Join(lines, ","))
 }
 
-func computeHmacSha1(attributes []attribute, secret string) string {
-	message := ""
-	for _, a := range attributes {
-		if a.Value != "" {
-			message += a.Key + a.Value + "\n"
+func computeHmacSha1(q url.Values, secret string) string {
+	keys := make([]string, 0, len(q))
+	for k := range q {
+		if k == "CHECKSUM" {
+			continue
 		}
+		keys = append(keys, k)
+	}
+
+	sort.Strings(keys)
+	message := ""
+	for _, k := range keys {
+		message += fmt.Sprintf("%s%s\n", k, q[k][0])
 	}
 
 	key := []byte(secret)
