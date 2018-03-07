@@ -85,8 +85,15 @@ func (e *epayGateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	operationType := checkType(r.URL.Query().Get("TYPE"))
 	log.Debugf(ctx, "IDN=%s, checksum=%s, merchant=%s,transactionID=%s, operationType=%s, total=%s", idn, checksum, merchant, transactionID, operationType, total)
 
-	checksumValue := fmt.Sprintf("IDN%s\nMERCHANTID%s\nTID%s\nTOTAL%s\nTYPE%s\n", idn, merchant, transactionID, total, operationType)
-	if checksum != computeHmacSha1(checksumValue, e.env.EpaySecret) {
+	attributes := []attribute{
+		{"IDN", idn},
+		{"MERCHANTID", merchant},
+		{"TID", transactionID},
+		{"TOTAL", total},
+		{"TYPE", string(operationType)},
+	}
+
+	if checksum != computeHmacSha1(attributes, e.env.EpaySecret) {
 		http.Error(w, "bad signature", http.StatusBadRequest)
 		return
 	}
@@ -100,6 +107,11 @@ func (e *epayGateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	} else {
 		http.Error(w, "not found", http.StatusNotFound)
 	}
+}
+
+type attribute struct {
+	Key   string
+	Value string
 }
 
 func (e *epayGateway) checkBill(ctx context.Context, rw http.ResponseWriter, r *http.Request) {
@@ -225,7 +237,14 @@ func buildLongDesc(subscriberID string, items []telcong.Item) string {
 	return fmt.Sprintf("Клиентски Номер: %s,Задължения за периода до: %s, Детайли: %s", subscriberID, endDate.Format("02/01/2006"), strings.Join(lines, ","))
 }
 
-func computeHmacSha1(message string, secret string) string {
+func computeHmacSha1(attributes []attribute, secret string) string {
+	message := ""
+	for _, a := range attributes {
+		if a.Value != "" {
+			message += a.Key + a.Value + "\n"
+		}
+	}
+
 	key := []byte(secret)
 	h := hmac.New(sha1.New, key)
 	h.Write([]byte(message))
