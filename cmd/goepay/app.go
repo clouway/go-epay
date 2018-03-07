@@ -192,7 +192,7 @@ func (e *epayGateway) confirmPaymentOrder(ctx context.Context, rw http.ResponseW
 }
 
 func successResponse(subscriberID, customerName string, items []telcong.Item, coins int) *dutyResponse {
-	return &dutyResponse{Status: "00", ShortDesc: "Клиент: " + customerName, LongDesc: buildLongDesc(subscriberID, items), Amount: coins}
+	return &dutyResponse{IDN: subscriberID, Status: "00", ShortDesc: "Клиент: " + customerName, LongDesc: buildLongDesc(subscriberID, items), Amount: coins}
 }
 
 func (e *epayGateway) createClient(ctx context.Context) *telcong.Client {
