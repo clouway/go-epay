@@ -56,26 +56,23 @@ type epayGateway struct {
 
 func (e *epayGateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
-	e.mu.Lock()
-	if e.conf == nil {
-		log.Debugf(ctx, "Looking for environment of: %s", r.URL.Host)
-		env, err := config.GetEnv(ctx, r.URL.Host)
-		if err != nil {
-			log.Debugf(ctx, "unable to read environment due: %v", err)
-			http.Error(w, "unable to read env configuration", http.StatusInternalServerError)
-			e.mu.Unlock()
-			return
-		}
-		e.env = env
-		conf, err := google.JWTConfigFromJSON([]byte(env.BillingJWTKey))
-		if err != nil {
-			e.mu.Unlock()
-			http.Error(w, "configuration error", http.StatusInternalServerError)
-			return
-		}
-		e.conf = conf
-
+	log.Debugf(ctx, "Looking for environment of: %s", r.URL.Host)
+	env, err := config.GetEnv(ctx, r.URL.Host)
+	if err != nil {
+		log.Debugf(ctx, "unable to read environment due: %v", err)
+		http.Error(w, "unable to read env configuration", http.StatusInternalServerError)
+		e.mu.Unlock()
+		return
 	}
+	conf, err := google.JWTConfigFromJSON([]byte(env.BillingJWTKey))
+	if err != nil {
+		e.mu.Unlock()
+		http.Error(w, "configuration error", http.StatusInternalServerError)
+		return
+	}
+	e.mu.Lock()
+	e.conf = conf
+	e.env = env
 	e.mu.Unlock()
 
 	idn := r.URL.Query().Get("IDN")
