@@ -61,12 +61,10 @@ func (e *epayGateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Debugf(ctx, "unable to read environment due: %v", err)
 		http.Error(w, "unable to read env configuration", http.StatusInternalServerError)
-		e.mu.Unlock()
 		return
 	}
 	conf, err := google.JWTConfigFromJSON([]byte(env.BillingJWTKey))
 	if err != nil {
-		e.mu.Unlock()
 		http.Error(w, "configuration error", http.StatusInternalServerError)
 		return
 	}
