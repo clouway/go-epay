@@ -1,10 +1,5 @@
-runtime: go
-api_version: go1
+runtime: go113
 automatic_scaling:
   min_idle_instances: 0
   max_idle_instances: 2
   max_pending_latency: 15s
-handlers:
-- url: /.*
-  script: _go_app
-  secure: always

@@ -13,8 +13,8 @@ import (
 	"strconv"
 	"syscall"
 
+	"github.com/clouway/go-epay/pkg/client/telcong"
 	"github.com/clouway/go-epay/pkg/epay"
-	"github.com/clouway/go-epay/pkg/telcong"
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jwt"
 )
@@ -27,7 +27,7 @@ var (
 
 const (
 	// EPAY payment source
-	EPAY telcong.PaymentSource = "EPAY"
+	EPAY epay.PaymentSource = "EPAY"
 )
 
 func main() {
@@ -75,18 +75,18 @@ func main() {
 }
 
 type telcongEpayGateway struct {
-	client *telcong.Client
+	client epay.Client
 }
 
 // GetCurrentBill returns the current bill of the provided customer.
 func (t *telcongEpayGateway) GetCurrentBill(customerID, transactionID string) (*epay.BillResponse, error) {
-	res, err := t.client.CreatePaymentOrder(context.Background(), telcong.CreatePaymentOrderRequest{SubscriberID: customerID, TransactionID: transactionID, PaymentSource: EPAY})
+	res, err := t.client.CreatePaymentOrder(context.Background(), epay.CreatePaymentOrderRequest{SubscriberID: customerID, TransactionID: transactionID, PaymentSource: EPAY})
 	if err != nil {
-		if err == telcong.ErrPaymentOrderAlreadyExists {
+		if err == epay.ErrPaymentOrderAlreadyExists {
 			return nil, fmt.Errorf("bill with transactionId '%s' was already processed", transactionID)
 		}
 
-		if err == telcong.ErrSubscriberNotFound {
+		if err == epay.ErrSubscriberNotFound {
 			return &epay.BillResponse{Successful: false, UnknownSubscriber: true}, nil
 		}
 
@@ -105,7 +105,7 @@ func (t *telcongEpayGateway) PayBill(customerID, transactionID string, Amount in
 	paymentOrder, err := t.client.GetPaymentOrder(context.Background(), transactionID)
 
 	if err != nil {
-		if err == telcong.ErrPaymentOrderNotFound {
+		if err == epay.ErrPaymentOrderNotFound {
 			return &epay.PaymentResponse{Successful: false}, nil
 		}
 		return nil, fmt.Errorf("could not retrieve payment order due: %v", err)
@@ -113,7 +113,7 @@ func (t *telcongEpayGateway) PayBill(customerID, transactionID string, Amount in
 
 	_, err = t.client.PayPaymentOrder(context.Background(), paymentOrder.ID)
 	if err != nil {
-		if err == telcong.ErrPaymentOrderAlreadyPaid {
+		if err == epay.ErrPaymentOrderAlreadyPaid {
 			return &epay.PaymentResponse{Successful: false, AlreadyPaid: true}, nil
 		}
 		return nil, err

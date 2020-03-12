@@ -8,10 +8,12 @@ import (
 	"net/url"
 	"reflect"
 	"testing"
+
+	"github.com/clouway/go-epay/pkg/epay"
 )
 
 func TestGetSubscriberDuties(t *testing.T) {
-	serverResponse := &SubscriberDuties{CustomerName: "::any customer::"}
+	serverResponse := &epay.SubscriberDuties{CustomerName: "::any customer::"}
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		jsonReply(w, serverResponse)
@@ -41,7 +43,7 @@ func TestGetDutiesOfUnknownSubscriber(t *testing.T) {
 
 	client := NewClient(nil, baseURL)
 	_, err := client.GetSubscriberDuties(context.Background(), "::subscriber id::")
-	if err != ErrSubscriberNotFound {
+	if err != epay.ErrSubscriberNotFound {
 		t.Fatalf("not existing subscriber response was returned as: %v", err)
 	}
 }
@@ -61,7 +63,7 @@ func TestGetDutiesFailsWithUnknownError(t *testing.T) {
 }
 
 func TestCreatePaymentOrder(t *testing.T) {
-	serverResponse := &PaymentOrder{ID: "1"}
+	serverResponse := &epay.PaymentOrder{ID: "1"}
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		jsonReply(w, serverResponse)
 	}))
@@ -70,7 +72,7 @@ func TestCreatePaymentOrder(t *testing.T) {
 
 	client := NewClient(nil, baseURL)
 
-	resp, err := client.CreatePaymentOrder(context.Background(), CreatePaymentOrderRequest{SubscriberID: "::sub::", TransactionID: "TID1"})
+	resp, err := client.CreatePaymentOrder(context.Background(), epay.CreatePaymentOrderRequest{SubscriberID: "::sub::", TransactionID: "TID1"})
 	if err != nil {
 		t.Fatalf("unable to create payment order due: %v", err)
 	}
@@ -90,7 +92,7 @@ func TestCreatePaymentOrderWithServerFailure(t *testing.T) {
 
 	client := NewClient(nil, baseURL)
 
-	_, err := client.CreatePaymentOrder(context.Background(), CreatePaymentOrderRequest{SubscriberID: "::sub::", TransactionID: "TID1"})
+	_, err := client.CreatePaymentOrder(context.Background(), epay.CreatePaymentOrderRequest{SubscriberID: "::sub::", TransactionID: "TID1"})
 	if err == nil {
 		t.Fatal("expected error due the error of the server, but got nothing")
 	}
@@ -105,10 +107,10 @@ func TestTryToCreateOrderForNotExistingSubscriber(t *testing.T) {
 
 	client := NewClient(nil, baseURL)
 
-	_, err := client.CreatePaymentOrder(context.Background(), CreatePaymentOrderRequest{SubscriberID: "::unknown::", TransactionID: "TID2"})
+	_, err := client.CreatePaymentOrder(context.Background(), epay.CreatePaymentOrderRequest{SubscriberID: "::unknown::", TransactionID: "TID2"})
 
-	if err != ErrSubscriberNotFound {
-		t.Errorf("	expected: %v", ErrSubscriberNotFound)
+	if err != epay.ErrSubscriberNotFound {
+		t.Errorf("	expected: %v", epay.ErrSubscriberNotFound)
 		t.Errorf("	     got: %v", err)
 	}
 }
@@ -122,16 +124,16 @@ func TestPaymentOrderAlreadyExists(t *testing.T) {
 
 	client := NewClient(nil, baseURL)
 
-	_, err := client.CreatePaymentOrder(context.Background(), CreatePaymentOrderRequest{SubscriberID: "::unknown::", TransactionID: "TID2"})
+	_, err := client.CreatePaymentOrder(context.Background(), epay.CreatePaymentOrderRequest{SubscriberID: "::unknown::", TransactionID: "TID2"})
 
-	if err != ErrPaymentOrderAlreadyExists {
-		t.Errorf("	expected: %v", ErrPaymentOrderAlreadyExists)
+	if err != epay.ErrPaymentOrderAlreadyExists {
+		t.Errorf("	expected: %v", epay.ErrPaymentOrderAlreadyExists)
 		t.Errorf("	     got: %v", err)
 	}
 }
 
 func TestPayPaymentOrder(t *testing.T) {
-	serverResponse := &PayPaymentOrderResponse{ID: "::any order id::", TransactionID: "TID2"}
+	serverResponse := &epay.PayPaymentOrderResponse{ID: "::any order id::", TransactionID: "TID2"}
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		jsonReply(w, serverResponse)
 	}))
@@ -163,8 +165,8 @@ func TestPayUnknownPaymentOrder(t *testing.T) {
 
 	_, err := client.PayPaymentOrder(context.Background(), "::unknown order id::")
 
-	if err != ErrPaymentOrderNotFound {
-		t.Errorf("	expected: %v", ErrPaymentOrderNotFound)
+	if err != epay.ErrPaymentOrderNotFound {
+		t.Errorf("	expected: %v", epay.ErrPaymentOrderNotFound)
 		t.Errorf("	     got: %v", err)
 	}
 
@@ -182,8 +184,8 @@ func TestPayAlreadyPaidPaymentOrder(t *testing.T) {
 
 	_, err := client.PayPaymentOrder(context.Background(), "::paid order id::")
 
-	if err != ErrPaymentOrderAlreadyPaid {
-		t.Errorf("	expected: %v", ErrPaymentOrderAlreadyPaid)
+	if err != epay.ErrPaymentOrderAlreadyPaid {
+		t.Errorf("	expected: %v", epay.ErrPaymentOrderAlreadyPaid)
 		t.Errorf("	     got: %v", err)
 	}
 
@@ -200,15 +202,15 @@ func TestPaymentFailsWithServerError(t *testing.T) {
 
 	_, err := client.PayPaymentOrder(context.Background(), "::order id::")
 
-	if err != ErrUnknown {
-		t.Errorf("	expected: %v", ErrUnknown)
+	if err != epay.ErrUnknown {
+		t.Errorf("	expected: %v", epay.ErrUnknown)
 		t.Errorf("	     got: %v", err)
 	}
 
 }
 
 func TestGetPaymentOrder(t *testing.T) {
-	serverResponse := &PaymentOrder{ID: "1"}
+	serverResponse := &epay.PaymentOrder{ID: "1"}
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		jsonReply(w, serverResponse)
 	}))
@@ -238,8 +240,8 @@ func TestGetUnknownPaymentOrder(t *testing.T) {
 	client := NewClient(nil, baseURL)
 
 	_, err := client.GetPaymentOrder(context.Background(), "1")
-	if err != ErrPaymentOrderNotFound {
-		t.Errorf("	expected: %v", ErrPaymentOrderNotFound)
+	if err != epay.ErrPaymentOrderNotFound {
+		t.Errorf("	expected: %v", epay.ErrPaymentOrderNotFound)
 		t.Errorf("	     got: %v", err)
 	}
 
