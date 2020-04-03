@@ -63,11 +63,15 @@ func (c *client) GetSubscriberDuties(ctx context.Context, subscriberID string) (
 	if resp.StatusCode == http.StatusOK {
 		dutyAmount := 0.0
 		documentIDs := make([]string, 0)
-
+		items := make([]epay.Item, 0)
 		for _, duty := range duties {
 			dutyAmount += duty.Total - duty.AmountPaid
 			documentID := strconv.Itoa(duty.ID)
 			documentIDs = append(documentIDs, documentID)
+
+			for _, item := range duty.Items {
+				items = append(items, epay.Item{Name: item.Label})
+			}
 		}
 
 		amount := fmt.Sprintf("%.2f", dutyAmount)
@@ -76,6 +80,7 @@ func (c *client) GetSubscriberDuties(ctx context.Context, subscriberID string) (
 			CustomerRef:  clientID,
 			DutyAmount:   epay.Amount{Value: amount},
 			DocumentIDs:  documentIDs,
+			Items:        items,
 		}, nil
 	}
 	if resp.StatusCode == http.StatusNotFound {
@@ -116,6 +121,7 @@ func (c *client) CreatePaymentOrder(ctx context.Context, createReq epay.CreatePa
 		TransactionID: po.TransactionID,
 		Amount:        epay.Amount{Value: po.Amount},
 		Created:       po.CreatedAt,
+		Items:         duties.Items,
 	}, nil
 }
 
@@ -219,6 +225,9 @@ func (c *client) findClientID(ctx context.Context, subscriberID string) (*client
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("got bad response due: %v", err)
 	}
+	if len(clients) == 0 {
+		return nil, epay.ErrSubscriberNotFound
+	}
 
 	return &clients[0], nil
 }
@@ -277,12 +286,17 @@ type clientRef struct {
 }
 
 type invoice struct {
-	ID                int     `json:"id"`
-	Total             float64 `json:"total"`
-	AmountPaid        float64 `json:"amountPaid"`
-	ClientFirstName   string  `json:"clientFirstName"`
-	ClientLastName    string  `json:"clientLastName"`
-	ClientCompanyName string  `json:"clientCompanyName"`
+	ID                int           `json:"id"`
+	Total             float64       `json:"total"`
+	AmountPaid        float64       `json:"amountPaid"`
+	ClientFirstName   string        `json:"clientFirstName"`
+	ClientLastName    string        `json:"clientLastName"`
+	ClientCompanyName string        `json:"clientCompanyName"`
+	Items             []invoiceItem `json:"items"`
+}
+
+type invoiceItem struct {
+	Label string `json:"label"`
 }
 
 type paymentOrder struct {

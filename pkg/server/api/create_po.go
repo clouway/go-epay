@@ -26,7 +26,11 @@ func CreatePaymentOrder(cf epay.ClientFactory) http.Handler {
 		var response *DutyResponse
 		if err == nil {
 			coins := res.Amount.InCoins()
-			response = successResponse(idn, res.CustomerName, res.Items, coins)
+			if coins == 0 {
+				response = &DutyResponse{Status: StatusNoDuties}
+			} else {
+				response = successResponse(idn, res.CustomerName, res.Items, coins)
+			}
 		} else if err == epay.ErrPaymentOrderAlreadyExists {
 			response = &DutyResponse{Status: StatusNoDuties}
 		} else if err == epay.ErrSubscriberNotFound {

@@ -25,23 +25,26 @@ func CheckBill(cf epay.ClientFactory) http.Handler {
 		var response *DutyResponse
 
 		idn := r.URL.Query().Get("IDN")
-		contextLogger.Debugf("checking bill of idn: %s", idn)
+		contextLogger.Printf("checking bill of idn: %s", idn)
+		contextLogger.Debugf("idn2: %s", idn)
+
 		res, err := client.GetSubscriberDuties(r.Context(), idn)
 		if err == nil {
 
 			coins := res.DutyAmount.InCoins()
-			contextLogger.Debugf("got duty amount: %d", coins)
+			contextLogger.Printf("got duty amount: %d", coins)
 			if coins == 0 {
 				response = &DutyResponse{Status: StatusNoDuties}
 			} else {
+				contextLogger.Printf("checking bill of idn: %v", res.Items)
 				response = successResponse(idn, res.CustomerName, res.Items, coins)
 			}
 		} else if err == epay.ErrSubscriberNotFound {
-			contextLogger.Debugf("subscriber '%s' was not found", idn)
+			contextLogger.Printf("subscriber '%s' was not found", idn)
 			// not valid idn number
 			response = &DutyResponse{Status: StatusSubscriberNotFound}
 		} else {
-			contextLogger.Debugf("got unknown error: %v", err)
+			contextLogger.Printf("got unknown error: %v", err)
 			// temporary not available
 			response = &DutyResponse{Status: StatusTemporaryNotAvailable}
 		}
@@ -51,7 +54,7 @@ func CheckBill(cf epay.ClientFactory) http.Handler {
 }
 
 func successResponse(subscriberID, customerName string, items []epay.Item, coins int) *DutyResponse {
-	return &DutyResponse{IDN: subscriberID, Status: "00", ShortDesc: "Клиент: " + customerName, LongDesc: "", Amount: coins}
+	return &DutyResponse{IDN: subscriberID, Status: "00", ShortDesc: "Клиент: " + customerName, LongDesc: buildLongDesc(subscriberID, items), Amount: coins}
 }
 
 func buildLongDesc(subscriberID string, items []epay.Item) string {
@@ -65,7 +68,6 @@ func buildLongDesc(subscriberID string, items []epay.Item) string {
 		dup[item.Name] = item.Name
 		lines = append(lines, item.Name)
 	}
-	endDate := items[len(items)-1].EndDate
 
-	return fmt.Sprintf("Клиентски Номер: %s,Задължения за периода до: %s, Детайли: %s", subscriberID, endDate.Format("02/01/2006"), strings.Join(lines, ","))
+	return fmt.Sprintf("Клиентски Номер: %s, Детайли: %s", subscriberID, strings.Join(lines, ","))
 }

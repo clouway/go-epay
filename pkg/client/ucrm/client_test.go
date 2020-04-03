@@ -12,6 +12,24 @@ import (
 	"github.com/clouway/go-epay/pkg/epay"
 )
 
+func TestSusbscriberNotFound(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/v1.0/clients", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("[]"))
+	}))
+
+	ts := httptest.NewServer(mux)
+	defer ts.Close()
+
+	baseURL, _ := url.Parse(ts.URL)
+
+	client := NewClient(baseURL, "testing-key", nil)
+	_, err := client.GetSubscriberDuties(context.Background(), "::subscriber id::")
+	if err != epay.ErrSubscriberNotFound {
+		t.Fatalf("expected subscriber not found but got: %v", err)
+	}
+}
+
 func TestResidentialSubscriberDuties(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/v1.0/clients", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -32,7 +50,12 @@ func TestResidentialSubscriberDuties(t *testing.T) {
 			   "total":20.0,
 			   "amountPaid": 0.0,
 			   "clientFirstName": "John",
-			   "clientLastName": "Smith"
+			   "clientLastName": "Smith",
+			   "items":[
+					{
+						"label":"service 1 04/2020"
+					}
+				]
 			}
 		 ]`
 		w.Write([]byte(content))
@@ -53,6 +76,7 @@ func TestResidentialSubscriberDuties(t *testing.T) {
 		CustomerName: "John Smith",
 		CustomerRef:  "708",
 		DutyAmount:   epay.Amount{Value: "20.00"},
+		Items:        []epay.Item{epay.Item{Name: "service 1 04/2020"}},
 		DocumentIDs:  []string{"101"},
 	}
 	if !reflect.DeepEqual(resp, serverResponse) {
@@ -81,21 +105,36 @@ func TestGetDutiesWhenMultipleInvoices(t *testing.T) {
 			   "total":20.0,
 			   "amountPaid": 10.0,
 			   "clientFirstName": "John",
-			   "clientLastName": "Smith"
+			   "clientLastName": "Smith",
+			   "items":[
+					{
+						"label":"service 1 04/2020"
+					}
+				]
 			},
 			{
 				"id": 102,           
 				"total":12.0,
 				"amountPaid": 0.0,
 				"clientFirstName": "John",
-				"clientLastName": "Smith"
+				"clientLastName": "Smith",
+				"items":[
+					{
+						"label":"service 1 05/2020"
+					}
+				]
 			 },
 			 {
 				"id": 103,           
 				"total":13.43,
 				"amountPaid": 0.0,
 				"clientFirstName": "John",
-				"clientLastName": "Smith"
+				"clientLastName": "Smith",
+				"items":[
+					{
+						"label":"service 1 06/2020"
+					}
+				]
 			 }
 		 ]`
 		w.Write([]byte(content))
@@ -117,6 +156,11 @@ func TestGetDutiesWhenMultipleInvoices(t *testing.T) {
 		CustomerRef:  "708",
 		DutyAmount:   epay.Amount{Value: "35.43"},
 		DocumentIDs:  []string{"101", "102", "103"},
+		Items: []epay.Item{
+			epay.Item{Name: "service 1 04/2020"},
+			epay.Item{Name: "service 1 05/2020"},
+			epay.Item{Name: "service 1 06/2020"},
+		},
 	}
 
 	if !reflect.DeepEqual(resp, serverResponse) {
@@ -159,6 +203,7 @@ func TestGetDutiesWhenNoInvoices(t *testing.T) {
 		CustomerRef:  "708",
 		DutyAmount:   epay.Amount{Value: "0.00"},
 		DocumentIDs:  []string{},
+		Items:        []epay.Item{},
 	}
 	if !reflect.DeepEqual(resp, serverResponse) {
 		t.Errorf("expected response to be: %v", serverResponse)
