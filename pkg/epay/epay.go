@@ -16,7 +16,6 @@ const (
 	NoCurrentBill Status = "62"
 	// UnknownSubscriber indicates that subscriber ID was broken
 	UnknownSubscriber Status = "14"
-
 	// PaymentProcessed indicates that payment was processed successfully
 	PaymentProcessed Status = "00"
 	// PaymentAlreadyProcessed indicates that payment was already processed

@@ -26,7 +26,17 @@ func (c *clientFactory) Create(ctx context.Context, env epay.Environment) epay.C
 
 	// Environment is of type UCRM
 	if env.Type == "ucrm" {
-		return ucrm.NewClient(billingURL, env.BillingKey, c.dClient)
+		methodID := env.Metadata["methodId"]
+		providerName := env.Metadata["providerName"]
+		providerPaymentID := env.Metadata["providerPaymentId"]
+		providerPaymentTime := env.Metadata["providerPaymentTime"]
+
+		return ucrm.NewClient(billingURL, env.BillingKey, c.dClient, ucrm.PaymentProvider{
+			MethodID:    methodID,
+			Name:        providerName,
+			PaymentID:   providerPaymentID,
+			PaymentTime: providerPaymentTime,
+		})
 	}
 
 	conf, _ := google.JWTConfigFromJSON([]byte(env.BillingJWTKey))

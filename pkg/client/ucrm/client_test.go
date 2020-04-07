@@ -23,7 +23,7 @@ func TestSusbscriberNotFound(t *testing.T) {
 
 	baseURL, _ := url.Parse(ts.URL)
 
-	client := NewClient(baseURL, "testing-key", nil)
+	client := NewClient(baseURL, "testing-key", nil, PaymentProvider{})
 	_, err := client.GetSubscriberDuties(context.Background(), "::subscriber id::")
 	if err != epay.ErrSubscriberNotFound {
 		t.Fatalf("expected subscriber not found but got: %v", err)
@@ -66,7 +66,7 @@ func TestResidentialSubscriberDuties(t *testing.T) {
 
 	baseURL, _ := url.Parse(ts.URL)
 
-	client := NewClient(baseURL, "testing-key", nil)
+	client := NewClient(baseURL, "testing-key", nil, PaymentProvider{})
 	resp, err := client.GetSubscriberDuties(context.Background(), "::subscriber id::")
 	if err != nil {
 		t.Fatalf("unable to retrieve subscriber duties due: %v", err)
@@ -145,7 +145,7 @@ func TestGetDutiesWhenMultipleInvoices(t *testing.T) {
 
 	baseURL, _ := url.Parse(ts.URL)
 
-	client := NewClient(baseURL, "testing-key", nil)
+	client := NewClient(baseURL, "testing-key", nil, PaymentProvider{})
 	resp, err := client.GetSubscriberDuties(context.Background(), "::subscriber id::")
 	if err != nil {
 		t.Fatalf("unable to retrieve subscriber duties due: %v", err)
@@ -192,7 +192,7 @@ func TestGetDutiesWhenNoInvoices(t *testing.T) {
 
 	baseURL, _ := url.Parse(ts.URL)
 
-	client := NewClient(baseURL, "testing-key", nil)
+	client := NewClient(baseURL, "testing-key", nil, PaymentProvider{})
 	resp, err := client.GetSubscriberDuties(context.Background(), "::subscriber id::")
 	if err != nil {
 		t.Fatalf("unable to retrieve subscriber duties due: %v", err)

@@ -20,15 +20,24 @@ import (
 
 const poKind = "PaymentOrder"
 
+// PaymentProvider is keeping the configured payment provider in UCRM.
+type PaymentProvider struct {
+	MethodID    string
+	Name        string
+	PaymentID   string
+	PaymentTime string
+}
+
 // NewClient creates a new client that uses the provided app key and baseURL.
-func NewClient(baseURL *url.URL, appKey string, dClient *datastore.Client) epay.Client {
-	return &client{BaseURL: baseURL, AppKey: appKey, dClient: dClient}
+func NewClient(baseURL *url.URL, appKey string, dClient *datastore.Client, paymentProvider PaymentProvider) epay.Client {
+	return &client{BaseURL: baseURL, AppKey: appKey, dClient: dClient, paymentProvider: paymentProvider}
 }
 
 type client struct {
-	BaseURL *url.URL
-	AppKey  string
-	dClient *datastore.Client
+	BaseURL         *url.URL
+	AppKey          string
+	dClient         *datastore.Client
+	paymentProvider PaymentProvider
 }
 
 // GetSubscriberDuties gets current subscriber duties.
@@ -160,16 +169,16 @@ func (c *client) PayPaymentOrder(ctx context.Context, orderID string) (*epay.Pay
 	amount, _ := strconv.ParseFloat(po.Amount, 64)
 	paymentReq := &paymentRequest{
 		ClientID:                     clientID,
-		MethodID:                     "d8c1eae9-d41d-479f-aeaf-38497975d7b3",
+		MethodID:                     c.paymentProvider.MethodID,
 		CheckNumber:                  "",
 		CreatedDate:                  jsonDate{time.Now()},
 		Amount:                       amount,
 		CurrencyCode:                 "BGN",
 		Note:                         "Paid in coins",
 		InvoiceIDs:                   invoiceIds,
-		ProviderName:                 "Worldpay",
-		ProviderPaymentID:            "WP451837",
-		ProviderPaymentTime:          "2016-09-12T00:00:00+0000",
+		ProviderName:                 c.paymentProvider.Name,
+		ProviderPaymentID:            c.paymentProvider.PaymentID,
+		ProviderPaymentTime:          c.paymentProvider.PaymentTime,
 		ApplyToInvoicesAutomatically: false,
 		UserID:                       1,
 	}

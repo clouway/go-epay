@@ -53,6 +53,9 @@ type Environment struct {
 	// MerchantID is the identifier of the merchant which was issued by ePay
 	// provider
 	MerchantID string
+
+	// Metadata is a set of key-value pairs keeping for keeping of internal metadata attributes
+	Metadata map[string]string
 }
 
 // SubscriberDuties represents duties of the subscriber

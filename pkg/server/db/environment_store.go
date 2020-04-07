@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -39,6 +40,7 @@ func (s *store) Get(ctx context.Context, name string) (*epay.Environment, error)
 		BillingURL:    e.BillingURL,
 		EpaySecret:    e.EpaySecret,
 		MerchantID:    e.MerchantID,
+		Metadata:      e.Metadata,
 	}, nil
 }
 
@@ -49,4 +51,38 @@ type environmentEntity struct {
 	BillingURL string
 	EpaySecret string
 	MerchantID string
+	Metadata   map[string]string `datastore:"-"`
+}
+
+func (e *environmentEntity) Load(ps []datastore.Property) error {
+	// Stored fields could not be loaded when struct is not having the same field for safety. This check
+	// ensures that entity will be loaded with it's metadata field.
+	if err := datastore.LoadStruct(e, ps); err != nil && err != err.(*datastore.ErrFieldMismatch) {
+		return err
+	}
+
+	for _, p := range ps {
+		if p.Name == "metadata" {
+			json.Unmarshal([]byte(p.Value.(string)), &e.Metadata)
+		}
+	}
+	return nil
+}
+
+func (e *environmentEntity) Save() ([]datastore.Property, error) {
+	props, err := datastore.SaveStruct(e)
+	if err != nil {
+		return nil, err
+	}
+	metadata, err := json.Marshal(e.Metadata)
+	if err != nil {
+		return nil, err
+	}
+	props = append(props, datastore.Property{
+		Name:    "metadata",
+		Value:   string(metadata),
+		NoIndex: true,
+	})
+
+	return props, nil
 }

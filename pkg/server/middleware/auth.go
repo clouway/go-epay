@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 
@@ -18,7 +19,15 @@ func EpayAPIMiddleware(envStore epay.EnvironmentStore) func(http.Handler) http.H
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			contextLogger := log.WithContext(r.Context())
-			host := r.Header.Get("X-Appengine-Default-Version-Hostname")
+			metadata := r.Header["X-Google-Apps-Metadata"]
+			host := ""
+			for _, m := range metadata {
+				if strings.Contains(m, ",") && strings.Contains(m, "=") {
+					parts := strings.Split(m, ",")
+					host = strings.Split(parts[1], "=")[1]
+				}
+			}
+
 			if host == "" {
 				host = r.URL.Host
 			}
