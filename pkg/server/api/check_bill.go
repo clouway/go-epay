@@ -56,13 +56,7 @@ func CheckBill(cf epay.ClientFactory) http.Handler {
 }
 
 func successResponse(subscriberID, customerName string, items []epay.Item, coins int) *DutyResponse {
-	shortDesc := "Клиент: " + customerName
-	if len(shortDesc) > shortDescMaxLen && len(customerName) < shortDescMaxLen {
-		shortDesc = customerName
-	}
-	if len(shortDesc) > shortDescMaxLen && len(customerName) >= shortDescMaxLen {
-		shortDesc = customerName[0 : shortDescMaxLen-1]
-	}
+	shortDesc := "Абонатен номер: " + subscriberID
 	return &DutyResponse{IDN: subscriberID, Status: "00", ShortDesc: shortDesc, LongDesc: buildLongDesc(customerName, subscriberID, items), Amount: coins}
 }
 
@@ -80,7 +74,7 @@ func buildLongDesc(customerName string, subscriberID string, items []epay.Item) 
 
 	longDesc := fmt.Sprintf("Клиент: %s, Абонатен Номер: %s, Детайли: %s", customerName, subscriberID, strings.Join(lines, ","))
 	if len(longDesc) > longDescMaxLen {
-		longDesc = longDesc[0 : longDescMaxLen-1]
+		longDesc = longDesc[0:longDescMaxLen]
 	}
 	return longDesc
 }
