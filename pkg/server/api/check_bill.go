@@ -2,15 +2,19 @@ package api
 
 import (
 	"fmt"
-
-	log "github.com/sirupsen/logrus"
-
 	"net/http"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/clouway/go-epay/pkg/epay"
 	"github.com/clouway/go-epay/pkg/server"
 	"github.com/clouway/go-epay/pkg/server/httputil"
+)
+
+const (
+	shortDescMaxLen = 40
+	longDescMaxLen  = 4000
 )
 
 // CheckBill checks bill of customer
@@ -25,8 +29,6 @@ func CheckBill(cf epay.ClientFactory) http.Handler {
 		var response *DutyResponse
 
 		idn := r.URL.Query().Get("IDN")
-		contextLogger.Printf("checking bill of idn: %s", idn)
-		contextLogger.Debugf("idn2: %s", idn)
 
 		res, err := client.GetSubscriberDuties(r.Context(), idn)
 		if err == nil {
@@ -54,10 +56,17 @@ func CheckBill(cf epay.ClientFactory) http.Handler {
 }
 
 func successResponse(subscriberID, customerName string, items []epay.Item, coins int) *DutyResponse {
-	return &DutyResponse{IDN: subscriberID, Status: "00", ShortDesc: "Клиент: " + customerName, LongDesc: buildLongDesc(subscriberID, items), Amount: coins}
+	shortDesc := "Клиент: " + customerName
+	if len(shortDesc) > shortDescMaxLen && len(customerName) < shortDescMaxLen {
+		shortDesc = customerName
+	}
+	if len(shortDesc) > shortDescMaxLen && len(customerName) >= shortDescMaxLen {
+		shortDesc = customerName[0 : shortDescMaxLen-1]
+	}
+	return &DutyResponse{IDN: subscriberID, Status: "00", ShortDesc: shortDesc, LongDesc: buildLongDesc(customerName, subscriberID, items), Amount: coins}
 }
 
-func buildLongDesc(subscriberID string, items []epay.Item) string {
+func buildLongDesc(customerName string, subscriberID string, items []epay.Item) string {
 	lines := []string{}
 	dup := make(map[string]string)
 	for _, item := range items {
@@ -69,5 +78,9 @@ func buildLongDesc(subscriberID string, items []epay.Item) string {
 		lines = append(lines, item.Name)
 	}
 
-	return fmt.Sprintf("Клиентски Номер: %s, Детайли: %s", subscriberID, strings.Join(lines, ","))
+	longDesc := fmt.Sprintf("Клиент: %s, Абонатен Номер: %s, Детайли: %s", customerName, subscriberID, strings.Join(lines, ","))
+	if len(longDesc) > longDescMaxLen {
+		longDesc = longDesc[0 : longDescMaxLen-1]
+	}
+	return longDesc
 }

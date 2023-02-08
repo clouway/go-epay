@@ -171,7 +171,7 @@ func (c *client) PayPaymentOrder(ctx context.Context, orderID string) (*epay.Pay
 		ClientID:                     clientID,
 		MethodID:                     c.paymentProvider.MethodID,
 		CheckNumber:                  "",
-		CreatedDate:                  jsonDate{time.Now()},
+		CreatedDate:                  jsonDateTime{time.Now()},
 		Amount:                       amount,
 		CurrencyCode:                 "BGN",
 		Note:                         "Paid in coins",
@@ -320,19 +320,19 @@ type paymentOrder struct {
 }
 
 type paymentRequest struct {
-	ClientID                     int      `json:"clientId"`
-	MethodID                     string   `json:"methodId"`
-	CheckNumber                  string   `json:"checkNumber"`
-	CreatedDate                  jsonDate `json:"createdDate"`
-	Amount                       float64  `json:"amount"`
-	CurrencyCode                 string   `json:"currencyCode"`
-	Note                         string   `json:"note"`
-	InvoiceIDs                   []int    `json:"invoiceIds"`
-	ProviderName                 string   `json:"providerName"`
-	ProviderPaymentID            string   `json:"providerPaymentId"`
-	ProviderPaymentTime          string   `json:"providerPaymentTime"`
-	ApplyToInvoicesAutomatically bool     `json:"applyToInvoicesAutomatically"`
-	UserID                       int      `json:"userId"`
+	ClientID                     int          `json:"clientId"`
+	MethodID                     string       `json:"methodId"`
+	CheckNumber                  string       `json:"checkNumber"`
+	CreatedDate                  jsonDateTime `json:"createdDate"`
+	Amount                       float64      `json:"amount"`
+	CurrencyCode                 string       `json:"currencyCode"`
+	Note                         string       `json:"note"`
+	InvoiceIDs                   []int        `json:"invoiceIds"`
+	ProviderName                 string       `json:"providerName"`
+	ProviderPaymentID            string       `json:"providerPaymentId"`
+	ProviderPaymentTime          string       `json:"providerPaymentTime"`
+	ApplyToInvoicesAutomatically bool         `json:"applyToInvoicesAutomatically"`
+	UserID                       int          `json:"userId"`
 }
 
 type paymentResponse struct {

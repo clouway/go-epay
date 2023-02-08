@@ -32,7 +32,6 @@ func EpayAPIMiddleware(envStore epay.EnvironmentStore) func(http.Handler) http.H
 				host = r.URL.Host
 			}
 			env, err := envStore.Get(r.Context(), host)
-
 			if err != nil {
 				contextLogger.Debugf("unable to read environment due: %v", err)
 				http.Error(w, "unable to read env configuration", http.StatusInternalServerError)
