@@ -24,7 +24,7 @@ func TestSuccessResponse(t *testing.T) {
 			want: &DutyResponse{
 				Status:    "00",
 				IDN:       "1234567",
-				ShortDesc: "ЕРДОАН ЕФРАИМОВ ЕФРАИ",
+				ShortDesc: "Абонатен номер: 1234567",
 				LongDesc:  "Клиент: ЕРДОАН ЕФРАИМОВ ЕФРАИМОВ, Абонатен Номер: 1234567, Детайли: ",
 				Amount:    100,
 			},

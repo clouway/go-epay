@@ -4,6 +4,8 @@ import (
 	"errors"
 	"strconv"
 	"time"
+
+	"github.com/clouway/go-epay/pkg/number"
 )
 
 var (
@@ -30,7 +32,6 @@ var (
 
 // Environment is representing a single environment in the context of the application.
 type Environment struct {
-
 	// Type is representing the type of the environment.
 	// For example: telcong, ucrm and etc.
 	Type string
@@ -121,5 +122,5 @@ type Amount struct {
 // InCoins gets the amount value in coins.
 func (a Amount) InCoins() int {
 	amount, _ := strconv.ParseFloat(a.Value, 64)
-	return int(amount * 100)
+	return int(number.Round(amount*100.00, 2))
 }

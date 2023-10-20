@@ -36,7 +36,6 @@ func NewClient(httpClient *http.Client, baseURL *url.URL) epay.Client {
 
 // GetSubscriberDuties gets current subscriber duties.
 func (c *client) GetSubscriberDuties(ctx context.Context, subscriberID string) (*epay.SubscriberDuties, error) {
-
 	req, err := c.newRequest(ctx, "GET", "/v1/billing/"+subscriberID+"/duties", nil)
 	if err != nil {
 		return nil, fmt.Errorf("could not create request due: %v", err)
@@ -69,10 +68,6 @@ func (c *client) CreatePaymentOrder(ctx context.Context, createReq epay.CreatePa
 		return nil, fmt.Errorf("could not process create order request due: %v", err)
 	}
 
-	if resp.StatusCode == http.StatusOK {
-		return &paymentOrder, nil
-	}
-
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, epay.ErrSubscriberNotFound
 	}
@@ -81,7 +76,11 @@ func (c *client) CreatePaymentOrder(ctx context.Context, createReq epay.CreatePa
 		return nil, epay.ErrPaymentOrderAlreadyExists
 	}
 
-	return nil, epay.ErrUnknown
+	if resp.StatusCode != http.StatusOK {
+		return nil, epay.ErrUnknown
+	}
+
+	return &paymentOrder, nil
 }
 
 // GetPaymentOrder gets the PaymentOrder which is associated with the provided orderKey
