@@ -32,10 +32,6 @@ var (
 
 // Environment is representing a single environment in the context of the application.
 type Environment struct {
-	// Type is representing the type of the environment.
-	// For example: telcong, ucrm and etc.
-	Type string
-
 	// The Billing JWT Key as string value. This key is issued
 	// from iam.telcong.com and is available for everyone that has clouway account
 	BillingJWTKey string

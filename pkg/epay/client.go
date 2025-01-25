@@ -5,12 +5,11 @@ import "context"
 // ClientFactory creates a client for particular environment.
 type ClientFactory interface {
 	// Create creates a new client for the provided environment.
-	Create(ctx context.Context, env Environment) Client
+	Create(ctx context.Context, env Environment, idn string) Client
 }
 
 // Client is representing a client to billing.
 type Client interface {
-
 	// GetSubscriberDuties gets duties of subscriber.
 	GetSubscriberDuties(ctx context.Context, subscriberID string) (*SubscriberDuties, error)
 

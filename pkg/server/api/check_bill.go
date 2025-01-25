@@ -24,11 +24,10 @@ func CheckBill(cf epay.ClientFactory) http.Handler {
 		contextLogger := log.WithContext(ctx)
 
 		env := r.Context().Value(server.EnvironmentKey).(*epay.Environment)
-		client := cf.Create(ctx, *env)
+		idn := r.URL.Query().Get("IDN")
+		client := cf.Create(ctx, *env, idn)
 
 		var response *DutyResponse
-
-		idn := r.URL.Query().Get("IDN")
 
 		res, err := client.GetSubscriberDuties(r.Context(), idn)
 		if err == nil {

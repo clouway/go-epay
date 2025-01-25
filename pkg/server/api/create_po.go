@@ -1,9 +1,9 @@
 package api
 
 import (
-	log "github.com/sirupsen/logrus"
-
 	"net/http"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/clouway/go-epay/pkg/epay"
 	"github.com/clouway/go-epay/pkg/server"
@@ -16,8 +16,9 @@ func CreatePaymentOrder(cf epay.ClientFactory) http.Handler {
 		ctx := r.Context()
 		contextLogger := log.WithContext(ctx)
 		env := r.Context().Value(server.EnvironmentKey).(*epay.Environment)
-		client := cf.Create(ctx, *env)
 		idn := r.URL.Query().Get("IDN")
+		client := cf.Create(ctx, *env, idn)
+
 		transactionID := r.URL.Query().Get("TID")
 		contextLogger.Printf("IDN: %s, TID: %s", idn, transactionID)
 

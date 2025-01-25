@@ -17,7 +17,8 @@ func ConfirmPaymentOrder(cf epay.ClientFactory) http.Handler {
 		contextLogger := log.WithContext(ctx)
 
 		env := ctx.Value(server.EnvironmentKey).(*epay.Environment)
-		client := cf.Create(r.Context(), *env)
+		idn := r.URL.Query().Get("IDN")
+		client := cf.Create(r.Context(), *env, idn)
 
 		transactionID := r.URL.Query().Get("TID")
 

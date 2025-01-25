@@ -20,7 +20,6 @@ type store struct {
 }
 
 func (s *store) Get(ctx context.Context, name string) (*epay.Environment, error) {
-
 	// A default name should be used
 	if strings.Contains(name, "appspot") || name == "" {
 		name = "default"
@@ -34,7 +33,6 @@ func (s *store) Get(ctx context.Context, name string) (*epay.Environment, error)
 	}
 
 	return &epay.Environment{
-		Type:          e.Type,
 		BillingJWTKey: e.BillingKey,
 		BillingKey:    e.BillingKey,
 		BillingURL:    e.BillingURL,
