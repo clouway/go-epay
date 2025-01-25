@@ -34,16 +34,19 @@ func (c *clientFactory) Create(ctx context.Context, env epay.Environment, idn st
 
 	if billingURL, ok := env.Metadata["billingUrl"]; ok {
 		billingURL, _ := url.Parse(billingURL)
+		apiKey := env.Metadata["apiKey"]
 		methodID := env.Metadata["methodId"]
 		providerName := env.Metadata["providerName"]
 		providerPaymentID := env.Metadata["providerPaymentId"]
 		providerPaymentTime := env.Metadata["providerPaymentTime"]
+		organizationID := env.Metadata["organizationId"]
 
-		return ucrm.NewClient(billingURL, env.BillingKey, c.dClient, ucrm.PaymentProvider{
-			MethodID:    methodID,
-			Name:        providerName,
-			PaymentID:   providerPaymentID,
-			PaymentTime: providerPaymentTime,
+		return ucrm.NewClient(billingURL, apiKey, c.dClient, ucrm.PaymentProvider{
+			MethodID:       methodID,
+			Name:           providerName,
+			PaymentID:      providerPaymentID,
+			PaymentTime:    providerPaymentTime,
+			OrganizationID: organizationID,
 		})
 
 	}

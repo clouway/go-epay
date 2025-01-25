@@ -22,10 +22,11 @@ const poKind = "PaymentOrder"
 
 // PaymentProvider is keeping the configured payment provider in UCRM.
 type PaymentProvider struct {
-	MethodID    string
-	Name        string
-	PaymentID   string
-	PaymentTime string
+	MethodID       string
+	Name           string
+	PaymentID      string
+	PaymentTime    string
+	OrganizationID string
 }
 
 // NewClient creates a new client that uses the provided app key and baseURL.
@@ -159,28 +160,14 @@ func (c *client) PayPaymentOrder(ctx context.Context, orderID string) (*epay.Pay
 		return nil, epay.ErrPaymentOrderNotFound
 	}
 
-	var invoiceIds = []int{}
-	for _, i := range po.InvoiceIDs {
-		invoiceID, _ := strconv.Atoi(i)
-		invoiceIds = append(invoiceIds, invoiceID)
-	}
-
 	clientID, _ := strconv.Atoi(po.ClientID)
 	amount, _ := strconv.ParseFloat(po.Amount, 64)
 	paymentReq := &paymentRequest{
-		ClientID:                     clientID,
-		MethodID:                     c.paymentProvider.MethodID,
-		CheckNumber:                  "",
-		CreatedDate:                  jsonDateTime{time.Now()},
-		Amount:                       amount,
-		CurrencyCode:                 "BGN",
-		Note:                         "Paid in coins",
-		InvoiceIDs:                   invoiceIds,
-		ProviderName:                 c.paymentProvider.Name,
-		ProviderPaymentID:            c.paymentProvider.PaymentID,
-		ProviderPaymentTime:          c.paymentProvider.PaymentTime,
-		ApplyToInvoicesAutomatically: false,
-		UserID:                       1,
+		ClientID:          clientID,
+		MethodID:          c.paymentProvider.MethodID,
+		Amount:            amount,
+		ProviderName:      c.paymentProvider.Name,
+		ProviderPaymentID: po.TransactionID,
 	}
 
 	req, err := c.newRequest(ctx, "POST", "/api/v1.0/payments", paymentReq)
@@ -195,7 +182,6 @@ func (c *client) PayPaymentOrder(ctx context.Context, orderID string) (*epay.Pay
 	}
 
 	if resp.StatusCode != http.StatusCreated {
-		log.Printf("got response status: %s", resp.Status)
 		return nil, epay.ErrUnknown
 	}
 
@@ -217,16 +203,15 @@ func (c *client) PayPaymentOrder(ctx context.Context, orderID string) (*epay.Pay
 func (c *client) findClientID(ctx context.Context, subscriberID string) (*clientRef, error) {
 	params := url.Values{}
 	params.Add("userIdent", subscriberID)
+	params.Add("organizationId", c.paymentProvider.OrganizationID)
 
 	req, err := c.newRequest(ctx, "GET", "/api/v1.0/clients", params)
-
 	if err != nil {
 		return nil, fmt.Errorf("could not create request due: %v", err)
 	}
 
 	var clients []clientRef
 	resp, err := c.do(req, &clients)
-
 	if err != nil {
 		return nil, fmt.Errorf("could not process get subscriber duties request due: %v", err)
 	}
@@ -257,8 +242,8 @@ func (c *client) newRequest(ctx context.Context, method, path string, body inter
 				return nil, err
 			}
 		}
-
 	}
+
 	req, err := http.NewRequest(method, u.String(), buf)
 	if err != nil {
 		return nil, err
@@ -320,19 +305,11 @@ type paymentOrder struct {
 }
 
 type paymentRequest struct {
-	ClientID                     int          `json:"clientId"`
-	MethodID                     string       `json:"methodId"`
-	CheckNumber                  string       `json:"checkNumber"`
-	CreatedDate                  jsonDateTime `json:"createdDate"`
-	Amount                       float64      `json:"amount"`
-	CurrencyCode                 string       `json:"currencyCode"`
-	Note                         string       `json:"note"`
-	InvoiceIDs                   []int        `json:"invoiceIds"`
-	ProviderName                 string       `json:"providerName"`
-	ProviderPaymentID            string       `json:"providerPaymentId"`
-	ProviderPaymentTime          string       `json:"providerPaymentTime"`
-	ApplyToInvoicesAutomatically bool         `json:"applyToInvoicesAutomatically"`
-	UserID                       int          `json:"userId"`
+	ClientID          int     `json:"clientId"`
+	MethodID          string  `json:"methodId"`
+	Amount            float64 `json:"amount"`
+	ProviderName      string  `json:"providerName"`
+	ProviderPaymentID string  `json:"providerPaymentId"`
 }
 
 type paymentResponse struct {
